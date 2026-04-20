@@ -2,10 +2,39 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Encontre quadras de esportes próximas a você e veja quem está jogando em tempo real">
+    <meta name="theme-color" content="#007AFF">
+    
     <title>LiveCourt</title>
+    <link rel="stylesheet" href="Style.css">
 </head>
 <body>
+    <header class="header">
+        <div class="container">
+            <h1 class="header__title">LIVE COURT</h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="welcome">
+            <p class="welcome__text">Busque quadras próximas, registre a sua e conecte-se com outros jogadores!</p>
+        </section>
+
+        <nav class="button-group" role="navigation" aria-label="Navegação principal">
+            <button class="btn primary" data-route="cadastro.html" aria-label="Ir para página de registro">
+                REGISTRAR
+            </button>
+            <button class="btn secondary" data-route="login.html" aria-label="Ir para página de login">
+                LOGIN
+            </button>
+        </nav>
+    </main>
     
+    <background class="background">
+        <img src="imagens/wallpaper.png" alt="Imagem de fundo com quadras de esportes" class="background">
+    </background>
+
+    <script src="Index.js"></script>
 </body>
 </html>
