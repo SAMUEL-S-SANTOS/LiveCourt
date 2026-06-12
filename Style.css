@@ -1,6 +1,9 @@
-* {
+html,body {
     margin: 0;
     padding: 0;
+}
+
+* {
     box-sizing: border-box;
 }
 
@@ -10,16 +13,51 @@ body {
     line-height: 1.5;
     color: #333;
     background-color: #fff;
+    display: flex;
+    height: 100vh;
 }
 
+p {
+    color: white;
+    text-align: center;
+}
+
+h1 span {
+    display: block;
+    text-align: center;
+}
+
+.vive {
+    color:#000000 ;
+}
+
+.quadra {
+    color: #FF5722;
+}
 
 .container {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-image: linear-gradient(to bottom,rgba(255, 255, 255, 0.5)), url(imagens/wallpaper.png);
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
+
+.header_icon{
+    background-image: url(imagens/bola.svg);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 320px;
+    height: 320px;
+}
 
 .btn {
     display: block;
@@ -36,7 +74,7 @@ body {
 
 .btn--primary {
     background-color: #007AFF;
-    color: white;
+    color: #FF5722;
 }
 
 .btn--secondary {
@@ -53,10 +91,18 @@ body {
     .button-group {
         display: flex;
         gap: 1rem;
+        flex-direction: column;
     }
     
     .btn {
         width: auto;
         flex: 1;
     }
+}
+
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
