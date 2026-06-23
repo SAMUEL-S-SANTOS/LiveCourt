@@ -1,108 +1,291 @@
-html,body {
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; }
 
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 16px;
-    line-height: 1.5;
-    color: #333;
-    background-color: #fff;
-    display: flex;
-    height: 100vh;
-}
-
-p {
-    color: white;
-    text-align: center;
-}
-
-h1 span {
-    display: block;
-    text-align: center;
-}
-
-.vive {
-    color:#000000 ;
-}
-
-.quadra {
-    color: #FF5722;
-}
-
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background-image: linear-gradient(to bottom,rgba(255, 255, 255, 0.5)), url(imagens/wallpaper.png);
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-size: cover;
-}
-
-
-.header_icon{
-    background-image: url(imagens/bola.svg);
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: contain;
-    width: 320px;
-    height: 320px;
-}
-
-.btn {
-    display: block;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    margin: 0.5rem 0;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    min-height: 44px; 
-}
-
-.btn--primary {
-    background-color: #007AFF;
-    color: #FF5722;
-}
-
-.btn--secondary {
-    background-color: #E5E5EA;
-    color: #007AFF;
-}
-
-.btn:active {
-    opacity: 0.8;
-}
-
-
-@media (min-width: 768px) {
-    .button-group {
-        display: flex;
-        gap: 1rem;
-        flex-direction: column;
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #0F1012;
+      color: #E6E1E5;
+      margin: 0;
     }
-    
-    .btn {
-        width: auto;
-        flex: 1;
-    }
-}
 
-header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ---------- INPUTS (compartilhado entre todas as páginas) ---------- */
+    input {
+      background: #1C1B1F;
+      border: 1px solid #303030;
+      border-radius: 12px;
+      color: #E6E1E5;
+      padding: 0 16px;
+      height: 44px;
+      font-size: 14px;
+      font-family: 'Outfit', sans-serif;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus     { border-color: #FF5722; }
+    input::placeholder { color: #938F99; }
+
+    /* ---------- LAYOUT: SIDEBAR ---------- */
+    #sidebar {
+      width: 260px;
+      min-height: 100vh;
+      background: #141416;
+      border-right: 1px solid #303030;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+      transition: transform 0.3s;
+    }
+
+    #content-area {
+      margin-left: 260px;
+      min-height: 100vh;
+    }
+
+    /* ---------- LAYOUT: DETAIL PANEL (slide-in pelo lado direito) ---------- */
+    #detail-panel {
+      position: fixed;
+      top: 0; right: -460px;
+      width: 420px;
+      max-width: 100vw;
+      height: 100vh;
+      background: #141416;
+      border-left: 1px solid #303030;
+      z-index: 200;
+      transition: right 0.35s cubic-bezier(.4, 0, .2, 1);
+      overflow-y: auto;
+    }
+    #detail-panel.open { right: 0; }
+
+    /* ---------- COMPONENTE: NAV ITEM (sidebar) ---------- */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      border-radius: 12px;
+      margin: 2px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #938F99;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .nav-item:hover  { background: #1C1B1F; color: #E6E1E5; }
+    .nav-item.active { background: #FF5722; color: white; }
+    .nav-item .material-symbols-outlined { font-size: 20px; }
+
+    /* ---------- COMPONENTE: CHIP / FILTRO ---------- */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid #49454F;
+      background: #2B2930;
+      color: #E6E1E5;
+      white-space: nowrap;
+    }
+    .chip.active { background: #FF5722; border-color: #FF5722; color: white; }
+
+    /* ---------- COMPONENTE: CARD DE QUADRA ---------- */
+    .court-card {
+      background: #1C1B1F;
+      border: 1px solid #303030;
+      border-radius: 20px;
+      padding: 20px;
+      transition: border-color 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+    .court-card:hover { border-color: #FF5722; transform: translateY(-2px); }
+
+    /* ---------- COMPONENTE: TAG DE COMODIDADE ---------- */
+    .tag {
+      background: #2B2930;
+      border: 1px solid #49454F;
+      border-radius: 10px;
+      padding: 5px 12px;
+      font-size: 11px;
+      color: #E6E1E5;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tag.selected {
+      background: rgba(255, 87, 34, 0.15);
+      border-color: #FF5722;
+      color: #FF5722;
+    }
+
+    /* ---------- COMPONENTE: BADGE DE TIPO (OUTDOOR/INDOOR) ---------- */
+    .badge {
+      display: inline-block;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 99px;
+      border: 1px solid #49454F;
+      background: #2B2930;
+      color: #FF5722;
+    }
+
+    /* ---------- COMPONENTE: BOTÃO FAVORITO ---------- */
+    .fav-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #2B2930;
+      border: 1px solid #49454F;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .fav-btn:hover { border-color: #FF5722; }
+
+    /* ---------- COMPONENTE: LABEL DE FORMULÁRIO ---------- */
+    .form-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: white;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    /* ---------- OVERLAY: FUNDO DO SIDEBAR NO MOBILE ---------- */
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 99;
+    }
+    #sidebar-overlay.show { display: block; }
+
+    /* ---------- OVERLAY: FUNDO DO DETAIL PANEL ---------- */
+    #detail-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 150;
+    }
+
+    /* ---------- MOBILE (max 768px) ---------- */
+    @media (max-width: 768px) {
+      #sidebar           { transform: translateX(-100%); }
+      #sidebar.mobile-open { transform: translateX(0); }
+      #content-area      { margin-left: 0; }
+      #detail-panel      { width: 100vw; right: -100vw; }
+    }
+
+    /* ---------- ANIMAÇÃO: PING (marker do usuário no mapa) ---------- */
+    @keyframes ping {
+      75%, 100% { transform: scale(2); opacity: 0; }
+    }
+
+    /* style da pagina home */
+ #map-canvas {
+          width: 100%;
+          height: calc(100vh - 160px);
+          background: #141416;
+          background-image: radial-gradient(#252528 1px, transparent 1px);
+          background-size: 24px 24px;
+          border-radius: 20px;
+          border: 1px solid #303030;
+          position: relative;
+          overflow: hidden;
+        }
+
+        /* Estradas decorativas (divs posicionados sobre o canvas) */
+        .map-road-h {
+          position: absolute;
+          left: 0; width: 100%;
+          background: #1E2025;
+        }
+        .map-road-v {
+          position: absolute;
+          top: 0; height: 100%;
+          background: #1E2025;
+        }
+
+        /* Marker de quadra no mapa */
+        .map-marker {
+          position: absolute;
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          background: #FF5722;
+          border: 2px solid white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: transform 0.15s;
+          z-index: 10;
+          box-shadow: 0 0 14px rgba(255, 87, 34, 0.45);
+          transform: translate(-50%, -50%);
+        }
+        .map-marker:hover { transform: translate(-50%, -50%) scale(1.18); }
+        .map-marker .material-symbols-outlined { font-size: 16px; color: white; }
+
+        /* Halo do marker (brilho laranja ao redor) */
+        .map-marker-halo {
+          position: absolute;
+          width: 48px; height: 48px;
+          border-radius: 50%;
+          background: rgba(255, 87, 34, 0.2);
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+
+        /* Controles de zoom (botões + / −) */
+        #map-zoom-controls {
+          position: absolute;
+          right: 20px; bottom: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          z-index: 10;
+        }
+        .map-zoom-btn {
+          width: 40px; height: 40px;
+          border-radius: 10px;
+          background: #1C1B1F;
+          border: 1px solid #303030;
+          color: white;
+          font-size: 20px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: border-color 0.15s;
+        }
+        .map-zoom-btn:hover { border-color: #FF5722; color: #FF5722; }
+
+        /* Card de localização atual (topo esquerdo do mapa) */
+        #map-location-card {
+          position: absolute;
+          top: 20px; left: 20px;
+          background: #1C1B1F;
+          border: 1px solid #303030;
+          border-radius: 14px;
+          padding: 12px 16px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          z-index: 10;
+          max-width: 280px;
+        }
+
+        /* style da pagina quadras */

@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Court Finder</title>
+
+  <!--
+  ================================================================
+    DEPENDÊNCIAS EXTERNAS
+    Quando separar em arquivos, adicionar em cada .html que precisar.
+    - Tailwind CSS v4 (substitui classes utilitárias inline)
+    - Material Symbols (ícones do Google)
+    - Google Fonts: Outfit + JetBrains Mono
+  ================================================================
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+<!--
+================================================================
+  HTML GLOBAL: SIDEBAR + TOPBAR
+  Quando separar em páginas, este bloco vai em cada .html
+  ou num partial/componente compartilhado (ex: _layout.html).
+================================================================
+-->
+
+<!-- Fundo escuro quando sidebar abre no mobile -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div style="padding: 28px 20px 20px;">
+
+    <!-- Logo -->
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:32px;">
+      <div style="width:44px; height:44px; border-radius:50%; background:#1C1B1F; border:2px solid #FF5722; display:flex; align-items:center; justify-content:center;">
+        <svg width="24" height="24" viewBox="0 0 108 108" fill="none" stroke="#FF5722" stroke-width="4">
+          <circle cx="54" cy="54" r="38"/>
+          <path d="M54 16V92M16 54H92"/>
+          <path d="M28 28Q44 54 28 80M80 28Q64 54 80 80"/>
+        </svg>
+      </div>
+      <div>
+        <div class="mono" style="font-size:9px; font-weight:700; color:#FF5722; letter-spacing:0.15em; text-transform:uppercase;">São Paulo</div>
+        <div style="font-size:17px; font-weight:800; color:white; line-height:1.1;">Court Finder</div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav style="display:flex; flex-direction:column; gap:2px;">
+      <div class="nav-item active" id="nav-map"     onclick="switchTab('map')">
+        <span class="material-symbols-outlined">map</span> Mapa
+      </div>
+      <div class="nav-item"        id="nav-search"  onclick="switchTab('search')">
+        <span class="material-symbols-outlined">view_list</span> Quadras
+      </div>
+      <div class="nav-item"        id="nav-add"     onclick="switchTab('add')">
+        <span class="material-symbols-outlined">add_box</span> Cadastrar Quadra
+      </div>
+      <div class="nav-item"        id="nav-profile" onclick="switchTab('profile')">
+        <span class="material-symbols-outlined">account_circle</span> Perfil
+      </div>
+    </nav>
+  </div>
+
+  <!-- Usuário logado (rodapé do sidebar) -->
+  <div style="margin-top:auto; padding:20px; border-top:1px solid #303030;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#FF5722,#FFAB91); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:white;">JD</div>
+      <div>
+        <div style="font-size:13px; font-weight:700; color:white;">Jogador de Quadra</div>
+        <div style="font-size:11px; color:#938F99;">Nível 12 • Amador Elite</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ÁREA DE CONTEÚDO -->
+<div id="content-area">
+
+  <!-- TOPBAR (global) -->
+  <header style="position:sticky; top:0; z-index:50; background:#0F1012; border-bottom:1px solid #303030; padding:16px 28px; display:flex; align-items:center; gap:16px;">
+    <!-- Botão hamburguer — só aparece no mobile (controlado por JS) -->
+    <button id="hamburger-btn" onclick="toggleSidebar()"
+      style="display:none; width:38px; height:38px; background:#1C1B1F; border:1px solid #303030; border-radius:10px; cursor:pointer; color:white; align-items:center; justify-content:center;">
+      <span class="material-symbols-outlined" style="font-size:20px;">menu</span>
+    </button>
+
+    <h1 id="page-title" style="font-size:22px; font-weight:800; color:white; margin:0; flex:1;">Ver no Mapa</h1>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+      <!-- Campo de busca global -->
+      <div style="position:relative;">
+        <input id="global-search" type="text" placeholder="Buscar quadras..."
+          style="width:280px; padding-left:38px;" oninput="handleSearch(this.value)">
+        <span class="material-symbols-outlined"
+          style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:18px; color:#938F99;">search</span>
+      </div>
+      <!-- Avatar do usuário -->
+      <div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#FF5722,#FFAB91); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:white;">JD</div>
+    </div>
+  </header>
+
+  <!-- VIEWS — cada bloco representa uma página separada -->
+  <main style="padding:28px;">
+
+
+    <!--
+    ================================================================
+      PÁGINA: MAPA
+      Quando separar → map.html + styles/map.css + js/map.js
+    ================================================================
+    -->
+    <div id="view-map">
+
+      <!--
+      CSS DESTA PÁGINA
+      → extrair para: styles/map.css
+      -->
+      <style>
+        /* Canvas decorativo do mapa (fundo com grid de pontos) */
+        #map-canvas {
+          width: 100%;
+          height: calc(100vh - 160px);
+          background: #141416;
+          background-image: radial-gradient(#252528 1px, transparent 1px);
+          background-size: 24px 24px;
+          border-radius: 20px;
+          border: 1px solid #303030;
+          position: relative;
+          overflow: hidden;
+        }
+
+        /* Estradas decorativas (divs posicionados sobre o canvas) */
+        .map-road-h {
+          position: absolute;
+          left: 0; width: 100%;
+          background: #1E2025;
+        }
+        .map-road-v {
+          position: absolute;
+          top: 0; height: 100%;
+          background: #1E2025;
+        }
+
+        /* Marker de quadra no mapa */
+        .map-marker {
+          position: absolute;
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          background: #FF5722;
+          border: 2px solid white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: transform 0.15s;
+          z-index: 10;
+          box-shadow: 0 0 14px rgba(255, 87, 34, 0.45);
+          transform: translate(-50%, -50%);
+        }
+        .map-marker:hover { transform: translate(-50%, -50%) scale(1.18); }
+        .map-marker .material-symbols-outlined { font-size: 16px; color: white; }
+
+        /* Halo do marker (brilho laranja ao redor) */
+        .map-marker-halo {
+          position: absolute;
+          width: 48px; height: 48px;
+          border-radius: 50%;
+          background: rgba(255, 87, 34, 0.2);
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+
+        /* Controles de zoom (botões + / −) */
+        #map-zoom-controls {
+          position: absolute;
+          right: 20px; bottom: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          z-index: 10;
+        }
+        .map-zoom-btn {
+          width: 40px; height: 40px;
+          border-radius: 10px;
+          background: #1C1B1F;
+          border: 1px solid #303030;
+          color: white;
+          font-size: 20px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: border-color 0.15s;
+        }
+        .map-zoom-btn:hover { border-color: #FF5722; color: #FF5722; }
+
+        /* Card de localização atual (topo esquerdo do mapa) */
+        #map-location-card {
+          position: absolute;
+          top: 20px; left: 20px;
+          background: #1C1B1F;
+          border: 1px solid #303030;
+          border-radius: 14px;
+          padding: 12px 16px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          z-index: 10;
+          max-width: 280px;
+        }
+      </style>
+
+      <!--
+      HTML DESTA PÁGINA
+      → extrair o conteúdo da <div id="view-map"> para: map.html
+      -->
+      <div id="map-canvas">
+
+        <!-- Estradas decorativas -->
+        <div class="map-road-h" style="top:35%; height:16px; transform:rotate(-4deg); transform-origin:left;"></div>
+        <div class="map-road-v" style="left:30%; width:18px;"></div>
+        <div class="map-road-h" style="top:65%; height:10px; opacity:0.4;"></div>
+
+        <!-- Marker do usuário (pulsante azul) -->
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:20;">
+          <span style="display:flex; width:20px; height:20px; position:relative;">
+            <span style="position:absolute; display:inline-flex; width:100%; height:100%; border-radius:50%; background:#3B82F6; opacity:0.5; animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></span>
+            <span style="position:relative; display:inline-flex; border-radius:50%; width:20px; height:20px; background:#3B82F6; border:2px solid white;"></span>
+          </span>
+        </div>
+
+        <!-- Marker Quadra 1 -->
+        <div class="map-marker-halo" style="top:26%; left:24%;"></div>
+        <div class="map-marker" style="top:26%; left:24%;" onclick="openDetail(1)">
+          <span class="material-symbols-outlined">sports_basketball</span>
+        </div>
+
+        <!-- Marker Quadra 2 -->
+        <div class="map-marker-halo" style="top:38%; left:72%;"></div>
+        <div class="map-marker" style="top:38%; left:72%;" onclick="openDetail(2)">
+          <span class="material-symbols-outlined">sports_basketball</span>
+        </div>
+
+        <!-- Card de localização atual -->
+        <div id="map-location-card">
+          <span class="material-symbols-outlined" style="color:#FF5722; font-size:20px;">location_on</span>
+          <div>
+            <div style="font-size:13px; font-weight:700; color:white;">Parque do Povo</div>
+            <div style="font-size:11px; color:#938F99;">São Paulo - SP • Próximo a você</div>
+          </div>
+        </div>
+
+        <!-- Controles de zoom -->
+        <div id="map-zoom-controls">
+          <button class="map-zoom-btn">+</button>
+          <button class="map-zoom-btn">−</button>
+        </div>
+
+      </div>
+      <!-- fim #map-canvas -->
+
+    </div>
+    <!-- FIM PÁGINA: MAPA -->
+
+
+    <!--
+    ================================================================
+      PÁGINA: LISTA DE QUADRAS
+      Quando separar → courts.html + styles/courts.css + js/courts.js
+    ================================================================
+    -->
+    <div id="view-search" style="display:none;">
+
+      <!--
+      CSS DESTA PÁGINA
+      → extrair para: styles/courts.css
+      -->
+      <style>
+        /* Grid responsivo dos cards */
+        #court-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 16px;
+        }
+      </style>
+
+      <!--
+      HTML DESTA PÁGINA
+      → extrair o conteúdo da <div id="view-search"> para: courts.html
+      -->
+
+      <!-- Chips de filtro -->
+      <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+        <div class="chip active" id="filter-all"     onclick="filterType('ALL')">Todas</div>
+        <div class="chip"        id="filter-outdoor" onclick="filterType('OUTDOOR')">Outdoor</div>
+        <div class="chip"        id="filter-indoor"  onclick="filterType('INDOOR')">Indoor</div>
+      </div>
+
+      <!-- Grid de cards (preenchido por JS) -->
+      <div id="court-grid"></div>
+
+    </div>
+    <!-- FIM PÁGINA: LISTA DE QUADRAS -->
+
+
+    <!--
+    ================================================================
+      PÁGINA: CADASTRAR QUADRA
+      Quando separar → add-court.html + styles/add-court.css + js/add-court.js
+    ================================================================
+    -->
+    <div id="view-add" style="display:none; max-width:640px;">
+
+      <!--
+      CSS DESTA PÁGINA
+      → extrair para: styles/add-court.css
+      -->
+      <style>
+        /* Container do formulário */
+        #add-court-form {
+          background: #1C1B1F;
+          border: 1px solid #303030;
+          border-radius: 20px;
+          padding: 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+
+        /* Botões Outdoor / Indoor */
+        .type-btn {
+          flex: 1;
+          height: 44px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          font-family: 'Outfit', sans-serif;
+          transition: all 0.15s;
+        }
+        .type-btn.active   { background: #FF5722; border: 1px solid #FF5722; color: white; }
+        .type-btn.inactive { background: #1C1B1F; border: 1px solid #303030; color: #E6E1E5; }
+
+        /* Botão de submit */
+        #btn-save-court {
+          width: 100%;
+          height: 48px;
+          background: #FF5722;
+          border: none;
+          border-radius: 14px;
+          color: white;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: 'Outfit', sans-serif;
+          transition: opacity 0.2s;
+          margin-top: 4px;
+        }
+        #btn-save-court:hover { opacity: 0.88; }
+      </style>
+
+      <!--
+      HTML DESTA PÁGINA
+      → extrair o conteúdo da <div id="view-add"> para: add-court.html
+      -->
+      <div id="add-court-form">
+
+        <div>
+          <h2 style="font-size:18px; font-weight:800; color:white; margin:0 0 4px;">Contribua com a Comunidade</h2>
+          <p  style="font-size:13px; color:#938F99; margin:0;">Inscreva uma nova quadra e ganhe 50 pontos de reputação!</p>
+        </div>
+
+        <div>
+          <label class="form-label">Nome da Quadra</label>
+          <input id="form-name" type="text" placeholder="Ex: Quadras do Ibirapuera">
+        </div>
+
+        <div>
+          <label class="form-label">Localização</label>
+          <input id="form-location" type="text" placeholder="Rua, Bairro, Cidade">
+        </div>
+
+        <div>
+          <label class="form-label">Tipo</label>
+          <div style="display:flex; gap:10px;">
+            <button id="btn-outdoor" class="type-btn active"   onclick="selectType('OUTDOOR')">
+              <span class="material-symbols-outlined" style="font-size:16px;">wb_sunny</span> OUTDOOR
+            </button>
+            <button id="btn-indoor"  class="type-btn inactive" onclick="selectType('INDOOR')">
+              <span class="material-symbols-outlined" style="font-size:16px;">home</span> INDOOR
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Comodidades</label>
+          <div id="amenities-container" style="display:flex; flex-wrap:wrap; gap:8px;">
+            <div class="tag" onclick="toggleAmenity('Iluminada',    this)">Iluminação</div>
+            <div class="tag" onclick="toggleAmenity('Água',         this)">Água Disponível</div>
+            <div class="tag" onclick="toggleAmenity('Segurança',    this)">Segurança</div>
+            <div class="tag" onclick="toggleAmenity('Estacionamento', this)">Estacionamento</div>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Rota / Referência</label>
+          <input id="form-route" type="text" placeholder="Como chegar, ponto de referência...">
+        </div>
+
+        <button id="btn-save-court" onclick="saveNewCourt()">SALVAR E PUBLICAR QUADRA</button>
+
+      </div>
+
+    </div>
+    <!-- FIM PÁGINA: CADASTRAR QUADRA -->
+
+
+    <!--
+    ================================================================
+      PÁGINA: PERFIL DO JOGADOR
+      Quando separar → profile.html + styles/profile.css + js/profile.js
+    ================================================================
+    -->
+    <div id="view-profile" style="display:none; max-width:720px;">
+
+      <!--
+      CSS DESTA PÁGINA
+      → extrair para: styles/profile.css
+      -->
+      <style>
+        /* Grid de estatísticas */
+        #profile-stats-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+
+        /* Card genérico do perfil */
+        .profile-card {
+          background: #1C1B1F;
+          border: 1px solid #303030;
+          border-radius: 20px;
+          padding: 20px;
+        }
+
+        /* Card de quadra favorita */
+        .fav-court-card {
+          background: #1C1B1F;
+          border: 1px solid #303030;
+          border-radius: 14px;
+          padding: 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          transition: border-color 0.2s;
+        }
+        .fav-court-card:hover { border-color: #FF5722; }
+      </style>
+
+      <!--
+      HTML DESTA PÁGINA
+      → extrair o conteúdo da <div id="view-profile"> para: profile.html
+      -->
+
+      <!-- Card do jogador -->
+      <div class="profile-card" style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+        <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#FF5722,#FFAB91); border:3px solid #FF5722; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:white; flex-shrink:0;">JD</div>
+        <div>
+          <div style="font-size:20px; font-weight:800; color:white;">Jogador de Quadra</div>
+          <div style="font-size:13px; color:#938F99;">Nível 12 • Amador Elite</div>
+          <div style="margin-top:8px; display:inline-flex; align-items:center; gap:6px; background:rgba(255,87,34,0.1); border:1px solid rgba(255,87,34,0.3); padding:4px 12px; border-radius:99px;">
+            <div style="width:6px; height:6px; border-radius:50%; background:#FF5722; animation:ping 1.5s infinite;"></div>
+            <span class="mono" style="font-size:9px; font-weight:700; color:#FF5722; text-transform:uppercase; letter-spacing:0.1em;">Craque da Semana</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid de stats -->
+      <div id="profile-stats-grid">
+        <div class="profile-card" style="text-align:center;">
+          <div style="font-size:36px; font-weight:800; color:white;">14</div>
+          <div style="font-size:11px; color:#938F99; text-transform:uppercase; font-weight:700; letter-spacing:0.08em;">Inscrições Ativas</div>
+        </div>
+        <div class="profile-card" style="text-align:center;">
+          <div id="fav-count" style="font-size:36px; font-weight:800; color:#FF5722;">0</div>
+          <div style="font-size:11px; color:#938F99; text-transform:uppercase; font-weight:700; letter-spacing:0.08em;">Quadras Favoritas</div>
+        </div>
+      </div>
+
+      <!-- Lista de favoritos (preenchida por JS) -->
+      <div style="font-size:11px; font-weight:700; color:#938F99; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px;">Minhas Quadras Favoritas</div>
+      <div id="fav-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+    </div>
+    <!-- FIM PÁGINA: PERFIL DO JOGADOR -->
+
+  </main>
+</div>
+<!-- fim #content-area -->
+
+
+<!--
+================================================================
+  COMPONENTE GLOBAL: DETAIL PANEL (slide-in direita)
+  Quando separar, incluir em cada página que precisar abrir detalhes,
+  ou usar um partial compartilhado: _detail-panel.html
+  O CSS deste componente já está no bloco CSS GLOBAL acima.
+================================================================
+-->
+<div id="detail-panel">
+
+  <!-- Header fixo do painel -->
+  <div style="padding:24px; border-bottom:1px solid #303030; display:flex; align-items:center; gap:14px; position:sticky; top:0; background:#141416; z-index:10;">
+    <button onclick="closeDetail()"
+      style="width:38px; height:38px; border-radius:50%; background:#1C1B1F; border:1px solid #303030; cursor:pointer; color:white; display:flex; align-items:center; justify-content:center;">
+      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+    </button>
+    <span style="font-size:12px; font-weight:800; color:white; text-transform:uppercase; letter-spacing:0.1em;">Detalhes da Quadra</span>
+  </div>
+
+  <!-- Conteúdo dinâmico (preenchido por openDetail() no JS) -->
+  <div style="padding:24px; display:flex; flex-direction:column; gap:20px;">
+
+    <!-- Imagem hero placeholder -->
+    <div style="width:100%; height:180px; border-radius:16px; background:#1C1B1F; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+      <div style="position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,87,34,0.15),transparent);"></div>
+      <svg width="60" height="60" viewBox="0 0 108 108" fill="none" stroke="#FF5722" stroke-width="3">
+        <circle cx="54" cy="54" r="40"/>
+        <path d="M54 14V94M14 54H94"/>
+        <path d="M26 26Q44 54 26 82M82 26Q64 54 82 82"/>
+      </svg>
+    </div>
+
+    <!-- Tipo + Avaliação -->
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+        <span class="badge mono" id="d-type">OUTDOOR</span>
+        <div style="background:#2B2930; border:1px solid #49454F; border-radius:99px; padding:4px 12px; font-size:13px; font-weight:800; color:#FF5722;">
+          <span id="d-rating">–</span> ★
+        </div>
+      </div>
+      <h2 id="d-name"     style="font-size:24px; font-weight:800; color:white; margin:0 0 4px;"></h2>
+      <p style="font-size:12px; color:#938F99; margin:0; display:flex; align-items:center; gap:4px;">
+        <span class="material-symbols-outlined" style="font-size:14px;">location_on</span>
+        <span id="d-location"></span>
+      </p>
+    </div>
+
+    <!-- Rota -->
+    <div style="border-top:1px solid #303030; padding-top:16px;">
+      <div style="font-size:10px; font-weight:700; color:#938F99; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">Rota / Referência</div>
+      <p id="d-route" style="font-size:13px; color:white; margin:0; line-height:1.6;"></p>
+    </div>
+
+    <!-- Comodidades -->
+    <div style="border-top:1px solid #303030; padding-top:16px;">
+      <div style="font-size:10px; font-weight:700; color:#938F99; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px;">Comodidades</div>
+      <div id="d-amenities" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+
+    <!-- Descrição -->
+    <div style="border-top:1px solid #303030; padding-top:16px;">
+      <div style="font-size:10px; font-weight:700; color:#938F99; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">Sobre Este Espaço</div>
+      <p id="d-description" style="font-size:13px; color:#E6E1E5; line-height:1.6; margin:0;"></p>
+    </div>
+
+    <!-- Botão voltar ao mapa -->
+    <button onclick="closeDetail(); switchTab('map')"
+      style="width:100%; height:48px; background:#FF5722; border:none; border-radius:14px; color:white; font-size:14px; font-weight:700; cursor:pointer; font-family:'Outfit',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:8px;">
+      <span class="material-symbols-outlined" style="font-size:18px;">navigation</span> Ver no Mapa
+    </button>
+
+  </div>
+</div>
+
+<!-- Fundo escuro atrás do detail panel -->
+<div id="detail-overlay" onclick="closeDetail()"></div>
+
+
+<!--
+================================================================
+  JS GLOBAL → extrair para: js/app.js
+  Estado da aplicação, navegação entre abas, detail panel,
+  sidebar mobile e busca global.
+================================================================
+-->
+<script>
+
+  // ---------- ESTADO GLOBAL DA APLICAÇÃO ----------
+  // Quando separar em arquivos, este objeto fica em js/app.js
+  // e é importado pelos outros módulos via import/export ou window.STATE.
+
+  const STATE = {
+    courts: JSON.parse(localStorage.getItem('cf_courts')) || [
+      {
+        id: 1,
+        name: "Arena Street Ball",
+        location: "Parque do Mofarrej, Pinheiros",
+        type: "OUTDOOR",
+        rating: 4.8,
+        route: "Estacionamento exclusivo ao lado do portão principal.",
+        description: "Tabelas acrílicas profissionais e piso emborrachado com ótimo amortecimento.",
+        amenities: ["Iluminada", "Água"]
+      },
+      {
+        id: 2,
+        name: "PlaySpace Indoor Club",
+        location: "Av. Brigadeiro Luis Antônio, SP",
+        type: "INDOOR",
+        rating: 4.9,
+        route: "Prédio azul de esquina com acesso pela guarita.",
+        description: "Estações climatizadas, vestiários com ducha quente e bebedouro livre.",
+        amenities: ["Iluminada", "Água", "Segurança", "Estacionamento"]
+      }
+    ],
+    favorites:     JSON.parse(localStorage.getItem('cf_favs')) || [1],
+    filter:        'ALL',
+    search:        '',
+    formType:      'OUTDOOR',
+    formAmenities: []
+  };
+
+  // Persiste courts e favorites no localStorage
+  function save() {
+    localStorage.setItem('cf_courts', JSON.stringify(STATE.courts));
+    localStorage.setItem('cf_favs',   JSON.stringify(STATE.favorites));
+  }
+
+
+  // ---------- NAVEGAÇÃO ENTRE ABAS ----------
+
+  function switchTab(tab) {
+    // Oculta todas as views e desativa todos os nav items
+    ['map', 'search', 'add', 'profile'].forEach(t => {
+      document.getElementById('view-' + t).style.display = 'none';
+      document.getElementById('nav-'  + t).classList.remove('active');
+    });
+
+    // Exibe a view ativa e marca o nav item correspondente
+    document.getElementById('view-' + tab).style.display = '';
+    document.getElementById('nav-'  + tab).classList.add('active');
+
+    // Atualiza o título da topbar
+    const titles = {
+      map:     'Ver no Mapa',
+      search:  'Quadras Disponíveis',
+      add:     'Cadastrar Quadra',
+      profile: 'Perfil do Jogador'
+    };
+    document.getElementById('page-title').textContent = titles[tab] || '';
+
+    // Renderiza o conteúdo dinâmico de cada aba
+    if (tab === 'search')  renderCourts();
+    if (tab === 'profile') renderProfile();
+
+    closeSidebar();
+  }
+
+
+  // ---------- SIDEBAR MOBILE ----------
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('sidebar-overlay').classList.toggle('show');
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  }
+
+
+  // ---------- BUSCA GLOBAL ----------
+
+  function handleSearch(val) {
+    STATE.search = val.toLowerCase();
+    // Só re-renderiza se a aba de quadras estiver ativa
+    if (document.getElementById('view-search').style.display !== 'none') {
+      renderCourts();
+    }
+  }
+
+
+  // ---------- DETAIL PANEL ----------
+
+  function openDetail(id) {
+    const court = STATE.courts.find(c => c.id === id);
+    if (!court) return;
+
+    // Preenche os campos do painel
+    document.getElementById('d-name').textContent        = court.name;
+    document.getElementById('d-location').textContent    = court.location;
+    document.getElementById('d-type').textContent        = court.type;
+    document.getElementById('d-rating').textContent      = court.rating;
+    document.getElementById('d-route').textContent       = court.route;
+    document.getElementById('d-description').textContent = court.description;
+
+    // Renderiza tags de comodidades
+    const amEl = document.getElementById('d-amenities');
+    amEl.innerHTML = court.amenities.length
+      ? court.amenities.map(a => `<span class="tag">${a}</span>`).join('')
+      : '<span style="color:#938F99; font-size:12px;">Sem comodidades registradas</span>';
+
+    // Abre o painel
+    document.getElementById('detail-panel').classList.add('open');
+    document.getElementById('detail-overlay').style.display = 'block';
+  }
+
+  function closeDetail() {
+    document.getElementById('detail-panel').classList.remove('open');
+    document.getElementById('detail-overlay').style.display = 'none';
+  }
+
+
+  // ---------- RESPONSIVIDADE ----------
+
+  function checkMobile() {
+    const isMobile = window.innerWidth < 768;
+    document.getElementById('hamburger-btn').style.display = isMobile ? 'flex' : 'none';
+    document.getElementById('global-search').style.width   = isMobile ? '160px' : '280px';
+  }
+  window.addEventListener('resize', checkMobile);
+  checkMobile();
+
+</script>
+
+
+<!--
+================================================================
+  JS PÁGINA: LISTA DE QUADRAS → extrair para: js/courts.js
+  Filtro por tipo, renderização do grid, toggle de favorito.
+================================================================
+-->
+<script>
+
+  // Altera o filtro ativo e re-renderiza os cards
+  function filterType(type) {
+    STATE.filter = type;
+
+    ['all', 'outdoor', 'indoor'].forEach(t =>
+      document.getElementById('filter-' + t).classList.remove('active')
+    );
+    document.getElementById('filter-' + type.toLowerCase()).classList.add('active');
+
+    renderCourts();
+  }
+
+  // Renderiza o grid de cards filtrando por tipo e busca
+  function renderCourts() {
+    const container = document.getElementById('court-grid');
+
+    const filtered = STATE.courts.filter(court => {
+      const typeOk   = STATE.filter === 'ALL' || court.type === STATE.filter;
+      const searchOk = court.name.toLowerCase().includes(STATE.search)
+                    || court.location.toLowerCase().includes(STATE.search);
+      return typeOk && searchOk;
+    });
+
+    // Estado vazio
+    if (!filtered.length) {
+      container.innerHTML = `
+        <div style="grid-column:1/-1; text-align:center; padding:60px; color:#938F99;">
+          <span class="material-symbols-outlined" style="font-size:40px; display:block; margin-bottom:10px;">error_outline</span>
+          <div style="font-weight:700; color:white;">Nenhuma quadra encontrada</div>
+          <div style="font-size:12px; margin-top:4px;">Ajuste os filtros ou a busca.</div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    filtered.forEach(court => {
+      const isFav = STATE.favorites.includes(court.id);
+
+      const card = document.createElement('div');
+      card.className = 'court-card';
+      card.onclick   = () => openDetail(court.id);
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+          <div style="flex:1; min-width:0;">
+            <span class="badge mono" style="margin-bottom:8px; display:inline-block;">${court.type}</span>
+            <div style="font-size:16px; font-weight:800; color:white; line-height:1.2;">${court.name}</div>
+            <div style="font-size:12px; color:#938F99; margin-top:3px;">${court.location}</div>
+          </div>
+          <div class="fav-btn" onclick="toggleFav(${court.id}, event)" style="margin-left:10px;">
+            <span class="material-symbols-outlined" style="font-size:16px; color:${isFav ? '#EF4444' : '#938F99'};">
+              ${isFav ? 'favorite' : 'favorite_border'}
+            </span>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #303030; padding-top:12px;">
+          <span style="font-size:14px; font-weight:800; color:#FF5722;">${court.rating} ★</span>
+          <button
+            onclick="openDetail(${court.id}); event.stopPropagation()"
+            style="height:34px; padding:0 16px; background:#FF5722; border:none; border-radius:10px; color:white; font-size:12px; font-weight:700; cursor:pointer; font-family:'Outfit',sans-serif;">
+            VER QUADRA
+          </button>
+        </div>`;
+
+      container.appendChild(card);
+    });
+  }
+
+  // Toggle favorito (coração nos cards)
+  function toggleFav(id, event) {
+    if (event) event.stopPropagation();
+
+    const idx = STATE.favorites.indexOf(id);
+    if (idx === -1) STATE.favorites.push(id);
+    else            STATE.favorites.splice(idx, 1);
+
+    save();
+    renderCourts();
+    renderProfile();
+  }
+
+</script>
+
+
+<!--
+================================================================
+  JS PÁGINA: CADASTRAR QUADRA → extrair para: js/add-court.js
+  Seleção de tipo, toggle de comodidade, submit do formulário.
+================================================================
+-->
+<script>
+
+  // Alterna visual dos botões Outdoor / Indoor
+  function selectType(type) {
+    STATE.formType = type;
+    document.getElementById('btn-outdoor').className = 'type-btn ' + (type === 'OUTDOOR' ? 'active' : 'inactive');
+    document.getElementById('btn-indoor').className  = 'type-btn ' + (type === 'INDOOR'  ? 'active' : 'inactive');
+  }
+
+  // Toggle visual de comodidade selecionada
+  function toggleAmenity(name, el) {
+    const idx = STATE.formAmenities.indexOf(name);
+    if (idx === -1) { STATE.formAmenities.push(name);    el.classList.add('selected'); }
+    else            { STATE.formAmenities.splice(idx, 1); el.classList.remove('selected'); }
+  }
+
+  // Valida e salva a nova quadra no STATE e localStorage
+  function saveNewCourt() {
+    const name     = document.getElementById('form-name').value.trim();
+    const location = document.getElementById('form-location').value.trim();
+    const route    = document.getElementById('form-route').value.trim();
+
+    if (!name || !location) {
+      alert('Preencha o nome e a localização!');
+      return;
+    }
+
+    STATE.courts.push({
+      id:          Date.now(),
+      name,
+      location,
+      type:        STATE.formType,
+      rating:      5.0,
+      route:       route || 'Sem rota cadastrada.',
+      description: 'Nova quadra adicionada pela comunidade Court Finder.',
+      amenities:   [...STATE.formAmenities]
+    });
+
+    save();
+
+    // Reseta o formulário
+    document.getElementById('form-name').value     = '';
+    document.getElementById('form-location').value = '';
+    document.getElementById('form-route').value    = '';
+    STATE.formAmenities = [];
+    document.querySelectorAll('#amenities-container .tag').forEach(el => el.classList.remove('selected'));
+    selectType('OUTDOOR');
+
+    alert('Quadra adicionada com sucesso!');
+    switchTab('search');
+  }
+
+</script>
+
+
+<!--
+================================================================
+  JS PÁGINA: PERFIL → extrair para: js/profile.js
+  Atualiza contador de favoritos e lista de quadras salvas.
+================================================================
+-->
+<script>
+
+  // Atualiza contador e lista de quadras favoritas no perfil
+  function renderProfile() {
+    document.getElementById('fav-count').textContent = STATE.favorites.length;
+
+    const list = document.getElementById('fav-list');
+
+    if (!STATE.favorites.length) {
+      list.innerHTML = `
+        <div style="background:#1C1B1F; border:1px solid #303030; border-radius:16px; padding:24px; text-align:center; color:#938F99; font-size:13px;">
+          Nenhuma quadra favorita ainda. Toque em ♥ para salvar.
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = '';
+    STATE.courts
+      .filter(court => STATE.favorites.includes(court.id))
+      .forEach(court => {
+        const el = document.createElement('div');
+        el.className = 'fav-court-card';
+        el.onclick   = () => openDetail(court.id);
+        el.innerHTML = `
+          <div>
+            <div style="font-size:14px; font-weight:700; color:white;">${court.name}</div>
+            <div style="font-size:11px; color:#938F99; margin-top:2px;">${court.location}</div>
+          </div>
+          <span class="material-symbols-outlined" style="color:#EF4444; font-size:18px;">favorite</span>`;
+        list.appendChild(el);
+      });
+  }
+
+</script>
+
+
+<!--
+================================================================
+  JS INICIALIZAÇÃO → parte de js/app.js
+  Executa assim que o DOM está pronto.
+================================================================
+-->
+<script>
+  // Ativa a aba Mapa como padrão ao carregar a página
+  switchTab('map');
+</script>
+
+
+</body>
+</html>
