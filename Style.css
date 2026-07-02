@@ -60,7 +60,7 @@
     }
     #detail-panel.open { right: 0; }
 
-    /* ---------- COMPONENTE: NAV ITEM (sidebar) ---------- */
+    
     .nav-item {
       display: flex;
       align-items: center;
@@ -78,7 +78,7 @@
     .nav-item.active { background: #FF5722; color: white; }
     .nav-item .material-symbols-outlined { font-size: 20px; }
 
-    /* ---------- COMPONENTE: CHIP / FILTRO ---------- */
+    
     .chip {
       display: inline-flex;
       align-items: center;

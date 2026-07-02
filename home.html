@@ -168,9 +168,356 @@
 
             </div>
 
+            <div id="view-search" style="display:none;">
+
+                <!--
+      CSS DESTA PÁGINA
+      → extrair para: styles/courts.css
+      -->
+                <style>
+                    /* Grid responsivo dos cards */
+                    #court-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                        gap: 16px;
+                    }
+                </style>
+
+                <!--
+      HTML DESTA PÁGINA
+      → extrair o conteúdo da <div id="view-search"> para: courts.html
+      -->
+
+                <!-- Chips de filtro -->
+                <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+                    <div class="chip active" id="filter-all" onclick="filterType('ALL')">Todas</div>
+                    <div class="chip" id="filter-outdoor" onclick="filterType('OUTDOOR')">Outdoor</div>
+                    <div class="chip" id="filter-indoor" onclick="filterType('INDOOR')">Indoor</div>
+                </div>
+
+                <!-- Grid de cards (preenchido por JS) -->
+                <div id="court-grid"></div>
+
+            </div>
+            <!-- FIM PÁGINA: LISTA DE QUADRAS -->
+
+
+            <!--
+    ================================================================
+      PÁGINA: CADASTRAR QUADRA
+      Quando separar → add-court.html + styles/add-court.css + js/add-court.js
+    ================================================================
+    -->
+            <div id="view-add" style="display:none; max-width:640px;">
+
+                <!--
+      CSS DESTA PÁGINA
+      → extrair para: styles/add-court.css
+      -->
+                <style>
+                    /* Container do formulário */
+                    #add-court-form {
+                        background: #1C1B1F;
+                        border: 1px solid #303030;
+                        border-radius: 20px;
+                        padding: 28px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 18px;
+                    }
+
+                    /* Botões Outdoor / Indoor */
+                    .type-btn {
+                        flex: 1;
+                        height: 44px;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 13px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        font-family: 'Outfit', sans-serif;
+                        transition: all 0.15s;
+                    }
+
+                    .type-btn.active {
+                        background: #FF5722;
+                        border: 1px solid #FF5722;
+                        color: white;
+                    }
+
+                    .type-btn.inactive {
+                        background: #1C1B1F;
+                        border: 1px solid #303030;
+                        color: #E6E1E5;
+                    }
+
+                    /* Botão de submit */
+                    #btn-save-court {
+                        width: 100%;
+                        height: 48px;
+                        background: #FF5722;
+                        border: none;
+                        border-radius: 14px;
+                        color: white;
+                        font-size: 14px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        font-family: 'Outfit', sans-serif;
+                        transition: opacity 0.2s;
+                        margin-top: 4px;
+                    }
+
+                    #btn-save-court:hover {
+                        opacity: 0.88;
+                    }
+                </style>
+
+                <!--
+      HTML DESTA PÁGINA
+      → extrair o conteúdo da <div id="view-add"> para: add-court.html
+      -->
+                <div id="add-court-form">
+
+                    <div>
+                        <h2 style="font-size:18px; font-weight:800; color:white; margin:0 0 4px;">Contribua com a
+                            Comunidade</h2>
+                        <p style="font-size:13px; color:#938F99; margin:0;">Inscreva uma nova quadra e ganhe 50 pontos
+                            de reputação!</p>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Nome da Quadra</label>
+                        <input id="form-name" type="text" placeholder="Ex: Quadras do Ibirapuera">
+                    </div>
+
+                    <div>
+                        <label class="form-label">Localização</label>
+                        <input id="form-location" type="text" placeholder="Rua, Bairro, Cidade">
+                    </div>
+
+                    <div>
+                        <label class="form-label">Tipo</label>
+                        <div style="display:flex; gap:10px;">
+                            <button id="btn-outdoor" class="type-btn active" onclick="selectType('OUTDOOR')">
+                                <span class="material-symbols-outlined" style="font-size:16px;">wb_sunny</span> OUTDOOR
+                            </button>
+                            <button id="btn-indoor" class="type-btn inactive" onclick="selectType('INDOOR')">
+                                <span class="material-symbols-outlined" style="font-size:16px;">home</span> INDOOR
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Comodidades</label>
+                        <div id="amenities-container" style="display:flex; flex-wrap:wrap; gap:8px;">
+                            <div class="tag" onclick="toggleAmenity('Iluminada',    this)">Iluminação</div>
+                            <div class="tag" onclick="toggleAmenity('Água',         this)">Água Disponível</div>
+                            <div class="tag" onclick="toggleAmenity('Segurança',    this)">Segurança</div>
+                            <div class="tag" onclick="toggleAmenity('Estacionamento', this)">Estacionamento</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Rota / Referência</label>
+                        <input id="form-route" type="text" placeholder="Como chegar, ponto de referência...">
+                    </div>
+
+                    <button id="btn-save-court" onclick="saveNewCourt()">SALVAR E PUBLICAR QUADRA</button>
+
+                </div>
+
+            </div>
+            <!-- FIM PÁGINA: CADASTRAR QUADRA -->
+
+
+            <!--
+    ================================================================
+      PÁGINA: PERFIL DO JOGADOR
+      Quando separar → profile.html + styles/profile.css + js/profile.js
+    ================================================================
+    -->
+            <div id="view-profile" style="display:none; max-width:720px;">
+
+                <!--
+      CSS DESTA PÁGINA
+      → extrair para: styles/profile.css
+      -->
+                <style>
+                    /* Grid de estatísticas */
+                    #profile-stats-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 16px;
+                        margin-bottom: 24px;
+                    }
+
+                    /* Card genérico do perfil */
+                    .profile-card {
+                        background: #1C1B1F;
+                        border: 1px solid #303030;
+                        border-radius: 20px;
+                        padding: 20px;
+                    }
+
+                    /* Card de quadra favorita */
+                    .fav-court-card {
+                        background: #1C1B1F;
+                        border: 1px solid #303030;
+                        border-radius: 14px;
+                        padding: 16px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        cursor: pointer;
+                        transition: border-color 0.2s;
+                    }
+
+                    .fav-court-card:hover {
+                        border-color: #FF5722;
+                    }
+                </style>
+
+                <!--
+      HTML DESTA PÁGINA
+      → extrair o conteúdo da <div id="view-profile"> para: profile.html
+      -->
+
+                <!-- Card do jogador -->
+                <div class="profile-card" style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+                    <div
+                        style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#FF5722,#FFAB91); border:3px solid #FF5722; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:white; flex-shrink:0;">
+                        JD</div>
+                    <div>
+                        <div style="font-size:20px; font-weight:800; color:white;">Jogador de Quadra</div>
+                        <div style="font-size:13px; color:#938F99;">Nível 12 • Amador Elite</div>
+                        <div
+                            style="margin-top:8px; display:inline-flex; align-items:center; gap:6px; background:rgba(255,87,34,0.1); border:1px solid rgba(255,87,34,0.3); padding:4px 12px; border-radius:99px;">
+                            <div
+                                style="width:6px; height:6px; border-radius:50%; background:#FF5722; animation:ping 1.5s infinite;">
+                            </div>
+                            <span class="mono"
+                                style="font-size:9px; font-weight:700; color:#FF5722; text-transform:uppercase; letter-spacing:0.1em;">Craque
+                                da Semana</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid de stats -->
+                <div id="profile-stats-grid">
+                    <div class="profile-card" style="text-align:center;">
+                        <div style="font-size:36px; font-weight:800; color:white;">14</div>
+                        <div
+                            style="font-size:11px; color:#938F99; text-transform:uppercase; font-weight:700; letter-spacing:0.08em;">
+                            Inscrições Ativas</div>
+                    </div>
+                    <div class="profile-card" style="text-align:center;">
+                        <div id="fav-count" style="font-size:36px; font-weight:800; color:#FF5722;">0</div>
+                        <div
+                            style="font-size:11px; color:#938F99; text-transform:uppercase; font-weight:700; letter-spacing:0.08em;">
+                            Quadras Favoritas</div>
+                    </div>
+                </div>
+
+                <!-- Lista de favoritos (preenchida por JS) -->
+                <div
+                    style="font-size:11px; font-weight:700; color:#938F99; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px;">
+                    Minhas Quadras Favoritas</div>
+                <div id="fav-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+            </div>
+            <!-- FIM PÁGINA: PERFIL DO JOGADOR -->
+
+
         </main>
     </div>
-    <script src="./js/app.js"></script>
+
+    <div id="detail-panel">
+
+        <!-- Header fixo do painel -->
+        <div
+            style="padding:24px; border-bottom:1px solid #303030; display:flex; align-items:center; gap:14px; position:sticky; top:0; background:#141416; z-index:10;">
+            <button onclick="closeDetail()"
+                style="width:38px; height:38px; border-radius:50%; background:#1C1B1F; border:1px solid #303030; cursor:pointer; color:white; display:flex; align-items:center; justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+            </button>
+            <span
+                style="font-size:12px; font-weight:800; color:white; text-transform:uppercase; letter-spacing:0.1em;">Detalhes
+                da Quadra</span>
+        </div>
+
+        <!-- Conteúdo dinâmico (preenchido por openDetail() no JS) -->
+        <div style="padding:24px; display:flex; flex-direction:column; gap:20px;">
+
+            <!-- Imagem hero placeholder -->
+            <div
+                style="width:100%; height:180px; border-radius:16px; background:#1C1B1F; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+                <div
+                    style="position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,87,34,0.15),transparent);">
+                </div>
+                <svg width="60" height="60" viewBox="0 0 108 108" fill="none" stroke="#FF5722" stroke-width="3">
+                    <circle cx="54" cy="54" r="40" />
+                    <path d="M54 14V94M14 54H94" />
+                    <path d="M26 26Q44 54 26 82M82 26Q64 54 82 82" />
+                </svg>
+            </div>
+
+            <!-- Tipo + Avaliação -->
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                    <span class="badge mono" id="d-type">OUTDOOR</span>
+                    <div
+                        style="background:#2B2930; border:1px solid #49454F; border-radius:99px; padding:4px 12px; font-size:13px; font-weight:800; color:#FF5722;">
+                        <span id="d-rating">–</span> ★
+                    </div>
+                </div>
+                <h2 id="d-name" style="font-size:24px; font-weight:800; color:white; margin:0 0 4px;"></h2>
+                <p style="font-size:12px; color:#938F99; margin:0; display:flex; align-items:center; gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;">location_on</span>
+                    <span id="d-location"></span>
+                </p>
+            </div>
+
+            <!-- Rota -->
+            <div style="border-top:1px solid #303030; padding-top:16px;">
+                <div
+                    style="font-size:10px; font-weight:700; color:#938F99; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">
+                    Rota / Referência</div>
+                <p id="d-route" style="font-size:13px; color:white; margin:0; line-height:1.6;"></p>
+            </div>
+
+            <!-- Comodidades -->
+            <div style="border-top:1px solid #303030; padding-top:16px;">
+                <div
+                    style="font-size:10px; font-weight:700; color:#938F99; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px;">
+                    Comodidades</div>
+                <div id="d-amenities" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+            </div>
+
+            <!-- Descrição -->
+            <div style="border-top:1px solid #303030; padding-top:16px;">
+                <div
+                    style="font-size:10px; font-weight:700; color:#938F99; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">
+                    Sobre Este Espaço</div>
+                <p id="d-description" style="font-size:13px; color:#E6E1E5; line-height:1.6; margin:0;"></p>
+            </div>
+
+            <!-- Botão voltar ao mapa -->
+            <button onclick="closeDetail(); switchTab('map')"
+                style="width:100%; height:48px; background:#FF5722; border:none; border-radius:14px; color:white; font-size:14px; font-weight:700; cursor:pointer; font-family:'Outfit',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:8px;">
+                <span class="material-symbols-outlined" style="font-size:18px;">navigation</span> Ver no Mapa
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Fundo escuro atrás do detail panel -->
+    <div id="detail-overlay" onclick="closeDetail()"></div>
+
+
+    <script src="./js/script.js"></script>
     <script>
         switchTab('map');
     </script>
