@@ -93,7 +93,7 @@
                 <!-- Campo de busca global -->
                 <div style="position:relative;">
                     <input id="global-search" type="text" placeholder="Buscar quadras..."
-                        style="width:280px; padding-left:38px;" oninput="handleSearch(this.value)">
+                        oninput="handleSearch(this.value)">
                     <span class="material-symbols-outlined"
                         style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:18px; color:#938F99;">search</span>
                 </div>
@@ -301,12 +301,10 @@
                     <div>
                         <label class="form-label">Tipo</label>
                         <div style="display:flex; gap:10px;">
-                            <button id="btn-outdoor" class="type-btn active" onclick="selectType('OUTDOOR')">
-                                <span class="material-symbols-outlined" style="font-size:16px;">wb_sunny</span> OUTDOOR
-                            </button>
-                            <button id="btn-indoor" class="type-btn inactive" onclick="selectType('INDOOR')">
-                                <span class="material-symbols-outlined" style="font-size:16px;">home</span> INDOOR
-                            </button>
+                            <select id="type" name="tipo">
+                                <option value="Outdoor">OUTDOOR</option>
+                                <option value="Indoor" selected>INDOOR</option>
+                            </select>
                         </div>
                     </div>
 
