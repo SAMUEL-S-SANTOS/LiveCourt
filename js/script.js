@@ -21,14 +21,14 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 document.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await supabase.auth.getSession();
 
-  // TEMPORÁRIO: comenta o redirect para testar a navegação
-  // if (!session) {
-  //   window.location.href = 'login.html';
-  //   return;
-  // }
+  if (!session) {
+    window.location.replace('Index.html');
+    return;
+  }
 
-  if (session) await loadUserInfo(session.user.id);
+  await loadUserInfo(session.user.id);
   switchTab('map');
+  await initMap();
 });
 
 
@@ -39,7 +39,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 const STATE = {
   filter:        'ALL',
   search:        '',
-  formAmenities: []
+  formAmenities: [],
+  formCoordinates: null
 };
 
 
@@ -82,28 +83,35 @@ async function loadUserInfo(userId) {
 // ================================================================
 
 function switchTab(tab) {
-  // Oculta todas as views e desativa todos os nav items
-  ['map', 'search', 'add', 'profile'].forEach(t => {
-    document.getElementById('view-' + t).style.display = 'none';
-    document.getElementById('nav-'  + t).classList.remove('active');
+  const validTabs = ['map', 'search', 'add', 'profile'];
+  if (!validTabs.includes(tab)) return;
+
+  validTabs.forEach(t => {
+    const view = document.getElementById('view-' + t);
+    const nav = document.getElementById('nav-' + t);
+    if (view) view.style.display = 'none';
+    if (nav) nav.classList.remove('active');
   });
 
-  // Exibe a view ativa e marca o nav item correspondente
-  document.getElementById('view-' + tab).style.display = '';
-  document.getElementById('nav-'  + tab).classList.add('active');
+  const activeView = document.getElementById('view-' + tab);
+  const activeNav = document.getElementById('nav-' + tab);
+  if (activeView) activeView.style.display = '';
+  if (activeNav) activeNav.classList.add('active');
 
-  // Atualiza o título da topbar
   const titles = {
-    map:     'Ver no Mapa',
-    search:  'Quadras Disponíveis',
-    add:     'Cadastrar Quadra',
+    map: 'Ver no Mapa',
+    search: 'Quadras Disponíveis',
+    add: 'Cadastrar Quadra',
     profile: 'Perfil do Jogador'
   };
-  document.getElementById('page-title').textContent = titles[tab] || '';
+  const title = document.getElementById('page-title');
+  if (title) title.textContent = titles[tab];
 
-  // Renderiza o conteúdo dinâmico de cada aba
-  if (tab === 'search')  renderCourts();
+  if (tab === 'search') renderCourts();
   if (tab === 'profile') renderProfile();
+  if (tab === 'map') {
+    initMap().then(() => setTimeout(() => map?.invalidateSize(), 0));
+  }
 
   closeSidebar();
 }
@@ -143,8 +151,10 @@ function handleSearch(val) {
 
 function checkMobile() {
   const isMobile = window.innerWidth < 768;
-  document.getElementById('hamburger-btn').style.display = isMobile ? 'flex' : 'none';
-  document.getElementById('global-search').style.width   = isMobile ? '160px' : '280px';
+  const hamburger = document.getElementById('hamburger-btn');
+  const search = document.getElementById('global-search');
+  if (hamburger) hamburger.style.display = isMobile ? 'flex' : 'none';
+  if (search) search.style.width = isMobile ? '160px' : '280px';
 }
 window.addEventListener('resize', checkMobile);
 checkMobile();
@@ -238,12 +248,14 @@ async function renderCourts() {
 
   // Busca IDs dos favoritos do usuário logado
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: favs } = await supabase
-    .from('favorites')
-    .select('court_id')
-    .eq('user_id', user.id);
-
-  const favIds = favs?.map(f => f.court_id) || [];
+  let favIds = [];
+  if (user) {
+    const { data: favs } = await supabase
+      .from('favorites')
+      .select('court_id')
+      .eq('user_id', user.id);
+    favIds = favs?.map(f => f.court_id) || [];
+  }
 
   // Renderiza os cards
   container.innerHTML = '';
@@ -289,6 +301,11 @@ async function toggleFav(courtId, event) {
   if (event) event.stopPropagation();
 
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    alert('Entre na sua conta para salvar favoritos.');
+    window.location.href = 'Index.html';
+    return;
+  }
 
   // Verifica se já existe o favorito
   const { data: existing } = await supabase
@@ -344,17 +361,28 @@ async function saveNewCourt() {
   btn.textContent = 'SALVANDO...';
 
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    alert('Sua sessão expirou. Entre novamente para publicar uma quadra.');
+    window.location.href = 'Index.html';
+    return;
+  }
 
-  const { error } = await supabase.from('courts').insert({
+  const newCourt = {
     name,
     location,
     type,
-    rating:      5.0,
-    route:       route || 'Sem rota cadastrada.',
+    rating: 5.0,
+    route: route || 'Sem rota cadastrada.',
     description: 'Quadra adicionada pela comunidade Court Finder.',
-    amenities:   [...STATE.formAmenities],
-    created_by:  user.id
-  });
+    amenities: [...STATE.formAmenities],
+    created_by: user.id
+  };
+  if (STATE.formCoordinates) {
+    newCourt.latitude = STATE.formCoordinates.latitude;
+    newCourt.longitude = STATE.formCoordinates.longitude;
+  }
+
+  const { error } = await supabase.from('courts').insert(newCourt);
 
   btn.disabled    = false;
   btn.textContent = 'SALVAR E PUBLICAR QUADRA';
@@ -384,6 +412,7 @@ async function saveNewCourt() {
 
 async function renderProfile() {
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
   // Busca perfil do jogador
   const { data: profile } = await supabase
@@ -452,5 +481,154 @@ async function renderProfile() {
       </div>
       <span class="material-symbols-outlined" style="color:#EF4444; font-size:18px;">favorite</span>`;
     list.appendChild(el);
+  });
+}
+
+// ================================================================
+//  MAPA: Leaflet + CartoDB (gratuito, sem chave)
+// ================================================================
+let map;
+let userMarker;
+let courtMarkers = [];
+const DEFAULT_MAP_CENTER = [-23.55052, -46.63331];
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+  })[char]);
+}
+
+async function initMap() {
+  if (!window.L || map) {
+    if (map) map.invalidateSize();
+    return;
+  }
+
+  map = L.map('live-map', { zoomControl: false, minZoom: 3 }).setView(DEFAULT_MAP_CENTER, 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 20,
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+  }).addTo(map);
+
+  map.on('moveend', () => {
+    const center = map.getCenter();
+    const subtitle = document.getElementById('map-location-subtitle');
+    if (subtitle) subtitle.textContent = `Centro: ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+  });
+
+  await Promise.all([showUserLocation(), loadCourtMarkers()]);
+  map.invalidateSize();
+}
+
+function zoomMap(amount) {
+  if (map) map.setZoom(map.getZoom() + amount);
+}
+
+function courtIcon() {
+  return L.divIcon({
+    className: 'livecourt-marker-wrapper',
+    html: '<div class="livecourt-marker"><span class="material-symbols-outlined">sports_basketball</span></div>',
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+  });
+}
+
+async function loadCourtMarkers() {
+  if (!map) return;
+  courtMarkers.forEach(marker => marker.remove());
+  courtMarkers = [];
+
+  const { data: courts, error } = await supabase
+    .from('courts')
+    .select('id, name, location, type, latitude, longitude')
+    .not('latitude', 'is', null)
+    .not('longitude', 'is', null);
+
+  // Compatibilidade: enquanto as colunas ainda não existirem, a lista segue funcional.
+  if (error || !courts) return;
+
+  courts.forEach(court => {
+    const latitude = Number(court.latitude);
+    const longitude = Number(court.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+
+    const marker = L.marker([latitude, longitude], { icon: courtIcon() })
+      .addTo(map)
+      .bindPopup(`<strong>${escapeHtml(court.name)}</strong><br><span>${escapeHtml(court.location || '')}</span><br><button class="map-popup-button" onclick="openDetail(${Number(court.id)})">Ver quadra</button>`);
+    courtMarkers.push(marker);
+  });
+}
+
+function showUserLocation() {
+  const title = document.getElementById('map-location-title');
+  const subtitle = document.getElementById('map-location-subtitle');
+  if (!navigator.geolocation) {
+    if (subtitle) subtitle.textContent = 'Geolocalização não é suportada neste navegador.';
+    return Promise.resolve();
+  }
+
+  if (subtitle) subtitle.textContent = 'Obtendo sua localização…';
+  return new Promise(resolve => navigator.geolocation.getCurrentPosition(
+    position => {
+      const { latitude, longitude } = position.coords;
+      const point = [latitude, longitude];
+      userMarker?.remove();
+      userMarker = L.circleMarker(point, {
+        radius: 9, color: '#fff', weight: 2, fillColor: '#3B82F6', fillOpacity: 1
+      }).addTo(map).bindPopup('Você está aqui');
+      map.setView(point, 14);
+      if (title) title.textContent = 'Sua localização';
+      if (subtitle) subtitle.textContent = 'Mostrando quadras próximas a você';
+      resolve();
+    },
+    () => {
+      if (title) title.textContent = 'São Paulo';
+      if (subtitle) subtitle.textContent = 'Permita a localização para ver as quadras mais próximas.';
+      resolve();
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+  ));
+}
+
+async function searchMapLocation() {
+  const input = document.getElementById('map-search');
+  const query = input?.value.trim();
+  if (!query) return;
+
+  const button = document.getElementById('map-search-button');
+  if (button) button.disabled = true;
+  try {
+    const response = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(query));
+    const results = await response.json();
+    if (!results?.length) {
+      alert('Local não encontrado. Tente informar bairro, cidade ou endereço.');
+      return;
+    }
+    const result = results[0];
+    map.setView([Number(result.lat), Number(result.lon)], 15);
+    const title = document.getElementById('map-location-title');
+    const subtitle = document.getElementById('map-location-subtitle');
+    if (title) title.textContent = result.display_name.split(',')[0];
+    if (subtitle) subtitle.textContent = result.display_name;
+  } catch {
+    alert('Não foi possível buscar este local agora. Tente novamente.');
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+function useCurrentLocationForCourt() {
+  if (!navigator.geolocation) {
+    alert('Geolocalização não é suportada neste navegador.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(position => {
+    const { latitude, longitude } = position.coords;
+    STATE.formCoordinates = { latitude, longitude };
+    const field = document.getElementById('form-coordinates');
+    if (field) field.value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+  }, () => alert('Não foi possível obter sua localização. Verifique a permissão do navegador.'), {
+    enableHighAccuracy: true, timeout: 10000
   });
 }
