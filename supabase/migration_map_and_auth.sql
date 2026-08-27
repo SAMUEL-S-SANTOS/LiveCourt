@@ -1,5 +1,5 @@
 -- Execute este arquivo no SQL Editor do projeto Supabase.
--- Ele preserva os dados existentes e adiciona apenas o necessário para o mapa e o acesso do usuário.
+-- Ele preserva os dados existentes e adiciona somente o necessário para autenticação e mapa.
 
 alter table public.courts
   add column if not exists latitude double precision,
@@ -8,6 +8,34 @@ alter table public.courts
 create index if not exists courts_coordinates_idx
   on public.courts (latitude, longitude)
   where latitude is not null and longitude is not null;
+
+-- Cria o perfil no servidor quando um usuário é cadastrado.
+-- Funciona mesmo quando "Confirm email" estiver habilitado e ainda não houver sessão no navegador.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, name, email, position)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'full_name', ''),
+    new.email,
+    coalesce(new.raw_user_meta_data ->> 'position', '')
+  )
+  on conflict (id) do update
+    set name = excluded.name,
+        email = excluded.email,
+        position = excluded.position;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 
 alter table public.profiles enable row level security;
 alter table public.courts enable row level security;
