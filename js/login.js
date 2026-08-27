@@ -8,7 +8,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Redireciona para o app se já houver sessão ativa
 async function checkSession() {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session) window.location.href = 'index.html';
+    if (session) window.location.href = 'home.html';
 }
 checkSession();
 
@@ -39,7 +39,7 @@ async function handleLogin() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-        errorMsg.textContent = 'E-mail ou senha incorretos.';
+        errorMsg.textContent = error.message === 'Email not confirmed' ? 'Confirme seu e-mail antes de entrar.' : 'E-mail ou senha incorretos.';
         errorEl.classList.add('show');
         btn.disabled = false;
         btn.textContent = 'ENTRAR';

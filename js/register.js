@@ -8,7 +8,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Redireciona se já logado
 async function checkSession() {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session) window.location.href = 'index.html';
+    if (session) window.location.href = 'home.html';
 }
 checkSession();
 
@@ -109,22 +109,14 @@ async function handleRegister() {
     if (authError) {
         showError(authError.message === 'User already registered'
             ? 'Este e-mail já está cadastrado.'
-            : 'Erro ao criar conta. Tente novamente.');
+            : authError.message);
         btn.disabled = false;
         btn.textContent = 'CRIAR CONTA';
         return;
     }
 
-    // 2. Insere o perfil na tabela "profiles" do banco
-    //    (a tabela é criada pelo SQL no README abaixo)
-    if (authData.user) {
-        await supabase.from('profiles').insert({
-            id: authData.user.id,   // mesmo UUID do auth
-            name,
-            email,
-            position: selectedPosition
-        });
-    }
+    // O perfil é criado pelo trigger handle_new_user no Supabase.
+    // Isso funciona tanto com confirmação de e-mail ativa quanto desativada.
 
     // Sucesso — exibe tela de confirmação
     document.getElementById('register-form').style.display = 'none';
