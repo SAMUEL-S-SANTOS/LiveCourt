@@ -115,22 +115,8 @@ async function handleRegister() {
         return;
     }
 
-    // 2. Insere o perfil na tabela "profiles" do banco
-    //    (a tabela é criada pelo SQL no README abaixo)
-    if (authData.user) {
-        const { error: profileError } = await supabase.from('profiles').insert({
-            id: authData.user.id,
-            name,
-            email,
-            position: selectedPosition
-        });
-        if (profileError) {
-            showError('Conta criada, mas não foi possível salvar o perfil: ' + profileError.message);
-            btn.disabled = false;
-            btn.textContent = 'CRIAR CONTA';
-            return;
-        }
-    }
+    // O perfil é criado pelo trigger handle_new_user no Supabase.
+    // Isso funciona tanto com confirmação de e-mail ativa quanto desativada.
 
     // Sucesso — exibe tela de confirmação
     document.getElementById('register-form').style.display = 'none';
