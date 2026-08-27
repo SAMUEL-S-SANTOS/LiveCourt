@@ -294,3 +294,20 @@
         }
 
         /* style da pagina quadras */
+
+/* ---------- MAPA INTERATIVO ---------- */
+#live-map { position:absolute; inset:0; z-index:1; background:#141416; }
+#map-search-bar { position:absolute; z-index:10; top:20px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:8px; width:min(460px, calc(100% - 40px)); padding:8px 10px; background:#1C1B1F; border:1px solid #303030; border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.35); }
+#map-search-bar .material-symbols-outlined { color:#938F99; font-size:20px; }
+#map-search { min-width:0; flex:1; height:32px; padding:0; background:transparent; border:0; color:#fff; outline:none; font:13px 'Outfit', sans-serif; }
+#map-search-button, .map-popup-button { background:#FF5722; border:0; border-radius:9px; color:#fff; cursor:pointer; font:700 12px 'Outfit',sans-serif; padding:8px 12px; }
+.livecourt-marker-wrapper { background:transparent; border:0; }
+.livecourt-marker { width:38px; height:38px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; border-radius:50%; background:#FF5722; box-shadow:0 0 14px rgba(255,87,34,.6); }
+.livecourt-marker .material-symbols-outlined { color:#fff; font-size:18px; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background:#1C1B1F; color:#fff; }
+.leaflet-popup-content { margin:12px 14px; font:13px 'Outfit',sans-serif; line-height:1.55; }
+.leaflet-popup-content span { color:#938F99; font-size:12px; }
+.leaflet-popup-button { margin-top:8px; }
+.leaflet-control-attribution { background:rgba(15,16,18,.75)!important; color:#938F99!important; font-size:9px!important; }
+.leaflet-control-attribution a { color:#FFAB91!important; }
+@media (max-width: 640px) { #map-search-bar { top:12px; } #map-location-card { top:68px; left:12px; max-width:calc(100% - 24px); } #map-zoom-controls { right:12px; bottom:12px; } }
