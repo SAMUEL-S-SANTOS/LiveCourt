@@ -1,63 +1,364 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="description"
-        content="Encontre quadras de esportes próximas a você e veja quem está jogando em tempo real">
-    <meta name="theme-color" content="#007AFF">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Court Finder — Login</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    
-    <title>LiveCourt</title>
+  <!--
+  ================================================================
+    DEPENDÊNCIAS EXTERNAS
+    - Tailwind CSS v4
+    - Supabase JS SDK (auth + database)
+    - Google Fonts + Material Symbols
+  ================================================================
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0"
+    rel="stylesheet" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
+  <!--
+  ================================================================
+    CSS PÁGINA: LOGIN → extrair para: styles/login.css
+  ================================================================
+  -->
+  <style>
+    /* ---------- RESET & BASE ---------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    <link rel="stylesheet" href="style.css">
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #0F1012;
+      color: #E6E1E5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ---------- LAYOUT: CARD CENTRAL ---------- */
+    .login-wrapper {
+      display: flex;
+      width: 100%;
+      max-width: 960px;
+      min-height: 560px;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid #303030;
+      margin: 24px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Painel esquerdo decorativo */
+    .login-left {
+      flex: 1;
+      background: linear-gradient(145deg, #1a1008 0%, #2a1200 40%, #1C1B1F 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-left::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 87, 34, 0.15) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Painel direito — formulário */
+    .login-right {
+      width: 400px;
+      background: #141416;
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    /* ---------- INPUTS ---------- */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #938F99;
+    }
+
+    .field-input {
+      position: relative;
+    }
+
+    .field-input input {
+      width: 100%;
+      height: 48px;
+      background: #1C1B1F;
+      border: 1px solid #303030;
+      border-radius: 12px;
+      color: #E6E1E5;
+      padding: 0 16px 0 44px;
+      font-size: 14px;
+      font-family: 'Outfit', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field-input input:focus {
+      border-color: #FF5722;
+    }
+
+    .field-input input::placeholder {
+      color: #49454F;
+    }
+
+    .field-input .field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #49454F;
+    }
+
+    /* ---------- BOTÕES ---------- */
+    .btn-primary {
+      width: 100%;
+      height: 50px;
+      background: #FF5722;
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.04em;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      height: 50px;
+      background: transparent;
+      border: 1px solid #303030;
+      border-radius: 14px;
+      color: #E6E1E5;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      letter-spacing: 0.04em;
+    }
+
+    .btn-secondary:hover {
+      border-color: #FF5722;
+      color: #FF5722;
+    }
+
+    /* ---------- FEEDBACK DE ERRO ---------- */
+    .error-msg {
+      display: none;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #FCA5A5;
+    }
+
+    .error-msg.show {
+      display: block;
+    }
+
+    /* ---------- DIVIDER ---------- */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #49454F;
+      font-size: 12px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #303030;
+    }
+
+    /* ---------- MOBILE ---------- */
+    @media (max-width: 700px) {
+      .login-left {
+        display: none;
+      }
+
+      .login-right {
+        width: 100%;
+        padding: 40px 28px;
+      }
+
+      .login-wrapper {
+        border-radius: 0;
+        margin: 0;
+        min-height: 100vh;
+      }
+    }
+  </style>
 </head>
 
-<body class="bg-[#0F1012] text-[#E6E1E5] flex justify-center items-center min-h-screen">
-    <div id="welcome-screen" class="absolute inset-0 z-50 flex flex-col justify-between p-8 bg-gradient-to-b from-[#0F1012] via-[#141416] to-[#1C1B1F] transition-all duration-500">
-      
-      
+<body>
 
-      <!-- Logotipo & Ilustração Central -->
-      <div class="flex flex-col items-center text-center my-auto gap-6">
-        <div class="relative w-32 h-32 bg-[#1C1B1F] rounded-full border-2 border-[#FF5722] flex items-center justify-center shadow-lg active:scale-95 transition-transform duration-300">
-          <!-- Ícone de Basquete em Vetor Dinâmico -->
-          <svg class="w-16 h-16 text-[#FF5722]" viewBox="0 0 108 108" fill="none" stroke="currentColor" stroke-width="3">
-            <circle cx="54" cy="54" r="40" stroke="#FF5722"/>
-            <path d="M54 14 V94 M14 54 H94" stroke="#FF5722"/>
-            <path d="M26 26 Q44 54 26 82 M82 26 Q64 54 82 82" stroke="#FF5722"/>
+  <!--
+================================================================
+  HTML PÁGINA: LOGIN
+================================================================
+-->
+  <div class="login-wrapper">
+
+    <!-- Painel esquerdo decorativo -->
+    <div class="login-left">
+      <div style="position:relative; z-index:1; text-align:center;">
+        <!-- Ícone de basquete -->
+        <div
+          style="width:96px; height:96px; border-radius:50%; background:#1C1B1F; border:2px solid #FF5722; display:flex; align-items:center; justify-content:center; margin:0 auto 28px;">
+          <svg width="48" height="48" viewBox="0 0 108 108" fill="none" stroke="#FF5722" stroke-width="4">
+            <circle cx="54" cy="54" r="38" />
+            <path d="M54 16V92M16 54H92" />
+            <path d="M28 28Q44 54 28 80M80 28Q64 54 80 80" />
           </svg>
-          <div class="absolute -top-1 -right-1 bg-red-600 text-[9px] font-bold px-2 py-0.5 rounded-full ring-2 ring-[#0F1012] animate-pulse">LIVE</div>
         </div>
-        
-        <div>
-          <h1 class="text-3xl font-black tracking-tight text-white">COURT FINDER</h1>
-          <p class="text-[#938F99] mt-1 text-sm tracking-wide">Explore, jogue e agende quadras instantaneamente</p>
+
+        <div class="mono"
+          style="font-size:10px; font-weight:700; color:#FF5722; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px;">
+          São Paulo</div>
+        <h1 style="font-size:32px; font-weight:800; color:white; line-height:1.1; margin-bottom:12px;">Court<br>Finder
+        </h1>
+        <p style="font-size:13px; color:#938F99; max-width:220px; line-height:1.6;">Encontre quadras, jogue com a
+          comunidade e registre sua evolução.</p>
+
+        <!-- Stats decorativos -->
+        <div style="display:flex; gap:24px; margin-top:36px; justify-content:center;">
+          <div style="text-align:center;">
+            <div style="font-size:22px; font-weight:800; color:#FF5722;">48</div>
+            <div style="font-size:10px; color:#938F99; text-transform:uppercase; letter-spacing:0.08em;">Quadras</div>
+          </div>
+          <div style="width:1px; background:#303030;"></div>
+          <div style="text-align:center;">
+            <div style="font-size:22px; font-weight:800; color:#FF5722;">1.2k</div>
+            <div style="font-size:10px; color:#938F99; text-transform:uppercase; letter-spacing:0.08em;">Jogadores</div>
+          </div>
+          <div style="width:1px; background:#303030;"></div>
+          <div style="text-align:center;">
+            <div style="font-size:22px; font-weight:800; color:#FF5722;">SP</div>
+            <div style="font-size:10px; color:#938F99; text-transform:uppercase; letter-spacing:0.08em;">Cidade</div>
+          </div>
         </div>
-      </div>
-
-      <!-- Botões de Ação Inferiores -->
-      <div class="flex flex-col gap-34 pb-4">
-        <button class="w-96 h-18 bg-[#FF5722] text-white font-bold rounded-2xl shadow-lg shadow-[#FF5722]/15 custom-ripple transition-all cursor-pointer mx-auto">
-          <a href="home.html">ENTRAR NO APLICATIVO</a>
-        </button>
-
-        <p class="text-center text-[10px] text-[#938F99] px-4">
-          Aqui você encontra as melhores quadras de esportes da sua região.
-        </p>
       </div>
     </div>
 
+    <!-- Painel direito — formulário de login -->
+    <div class="login-right">
 
-    <script src="index.js"></script>
+      <div>
+        <h2 style="font-size:22px; font-weight:800; color:white; margin-bottom:4px;">Bem-vindo de volta</h2>
+        <p style="font-size:13px; color:#938F99;">Entre na sua conta para continuar jogando.</p>
+      </div>
+
+      <!-- Mensagem de erro -->
+      <div class="error-msg" id="login-error">
+        <span id="login-error-text">E-mail ou senha incorretos.</span>
+      </div>
+
+      <!-- Campos do formulário -->
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="field-group">
+          <label class="field-label">E-mail</label>
+          <div class="field-input">
+            <span class="material-symbols-outlined field-icon">mail</span>
+            <input id="login-email" type="email" placeholder="seu@email.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Senha</label>
+          <div class="field-input">
+            <span class="material-symbols-outlined field-icon">lock</span>
+            <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+        </div>
+      </div>
+
+      <!-- Botões de ação -->
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn-primary" id="btn-login" onclick="handleLogin()">
+          ENTRAR
+        </button>
+
+        <div class="divider">ou</div>
+
+        <button class="btn-secondary" onclick="window.location.href='register.html'">
+          CRIAR CONTA
+        </button>
+      </div>
+
+      <p style="font-size:11px; color:#49454F; text-align:center; line-height:1.6;">
+        Ao entrar você concorda com os<br>
+        <span style="color:#938F99; cursor:pointer; text-decoration:underline;">Termos de Serviço</span> e
+        <span style="color:#938F99; cursor:pointer; text-decoration:underline;">Política de Privacidade</span>.
+      </p>
+
+    </div>
+  </div>
+
+
+
+  <script src="./js/login.js"></script>
+
 </body>
 
 </html>

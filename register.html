@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Court Finder — Cadastro</title>
+
+  <!--
+  ================================================================
+    DEPENDÊNCIAS EXTERNAS
+    - Tailwind CSS v4
+    - Supabase JS SDK (auth + database)
+    - Google Fonts + Material Symbols
+  ================================================================
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0"
+    rel="stylesheet" />
+
+  <!--
+  ================================================================
+    CSS PÁGINA: CADASTRO → extrair para: styles/register.css
+  ================================================================
+  -->
+  <style>
+    /* ---------- RESET & BASE ---------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #0F1012;
+      color: #E6E1E5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ---------- LAYOUT: CARD DO FORMULÁRIO ---------- */
+    .register-card {
+      width: 100%;
+      max-width: 520px;
+      background: #141416;
+      border: 1px solid #303030;
+      border-radius: 28px;
+      padding: 48px 44px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ---------- INPUTS ---------- */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #938F99;
+    }
+
+    .field-input {
+      position: relative;
+    }
+
+    .field-input input,
+    .field-input select {
+      width: 100%;
+      height: 48px;
+      background: #1C1B1F;
+      border: 1px solid #303030;
+      border-radius: 12px;
+      color: #E6E1E5;
+      padding: 0 16px 0 44px;
+      font-size: 14px;
+      font-family: 'Outfit', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .field-input input:focus,
+    .field-input select:focus {
+      border-color: #FF5722;
+    }
+
+    .field-input input::placeholder {
+      color: #49454F;
+    }
+
+    /* Select sem ícone à esquerda (usa chevron customizado) */
+    .field-input.select-field input,
+    .field-input.select-field select {
+      padding-left: 44px;
+    }
+
+    .field-input .field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #49454F;
+      pointer-events: none;
+    }
+
+    /* Chevron do select */
+    .select-chevron {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #49454F;
+      pointer-events: none;
+    }
+
+    /* ---------- GRID DE DOIS CAMPOS ---------- */
+    .fields-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* ---------- INDICADOR DE FORÇA DA SENHA ---------- */
+    .password-strength {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .strength-bar {
+      flex: 1;
+      height: 3px;
+      border-radius: 99px;
+      background: #303030;
+      transition: background 0.3s;
+    }
+
+    .strength-label {
+      font-size: 10px;
+      color: #938F99;
+      margin-top: 4px;
+    }
+
+    /* ---------- SELETOR DE POSIÇÃO (chips visuais) ---------- */
+    .position-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .position-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 6px;
+      border-radius: 12px;
+      border: 1px solid #303030;
+      background: #1C1B1F;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .position-chip:hover {
+      border-color: #FF5722;
+    }
+
+    .position-chip.active {
+      border-color: #FF5722;
+      background: rgba(255, 87, 34, 0.12);
+    }
+
+    .position-chip .pos-abbr {
+      font-size: 11px;
+      font-weight: 800;
+      color: #938F99;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .position-chip .pos-name {
+      font-size: 9px;
+      color: #49454F;
+      line-height: 1.2;
+    }
+
+    .position-chip.active .pos-abbr {
+      color: #FF5722;
+    }
+
+    .position-chip.active .pos-name {
+      color: #938F99;
+    }
+
+    /* ---------- BOTÕES ---------- */
+    .btn-primary {
+      width: 100%;
+      height: 50px;
+      background: #FF5722;
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.04em;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ---------- FEEDBACK DE ERRO / SUCESSO ---------- */
+    .feedback-msg {
+      display: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+
+    .feedback-msg.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #FCA5A5;
+    }
+
+    .feedback-msg.success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86EFAC;
+    }
+
+    .feedback-msg.show {
+      display: block;
+    }
+
+    /* ---------- LINK VOLTAR ---------- */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #938F99;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.15s;
+      margin-bottom: 28px;
+    }
+
+    .back-link:hover {
+      color: #FF5722;
+    }
+
+    /* ---------- MOBILE ---------- */
+    @media (max-width: 560px) {
+      .register-card {
+        padding: 32px 24px;
+        border-radius: 0;
+      }
+
+      body {
+        padding: 0;
+        align-items: flex-start;
+      }
+
+      .fields-row {
+        grid-template-columns: 1fr;
+      }
+
+      .position-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!--
+================================================================
+  HTML PÁGINA: CADASTRO
+================================================================
+-->
+  <div class="register-card">
+
+    <!-- Voltar para login -->
+    <a class="back-link" onclick="window.location.href='login.html'">
+      <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+      Voltar ao login
+    </a>
+
+    <!-- Cabeçalho -->
+    <div style="margin-bottom:32px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <div
+          style="width:36px; height:36px; border-radius:50%; background:#1C1B1F; border:2px solid #FF5722; display:flex; align-items:center; justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 108 108" fill="none" stroke="#FF5722" stroke-width="5">
+            <circle cx="54" cy="54" r="38" />
+            <path d="M54 16V92M16 54H92" />
+            <path d="M28 28Q44 54 28 80M80 28Q64 54 80 80" />
+          </svg>
+        </div>
+        <span class="mono" style="font-size:12px; font-weight:700; color:#FF5722; letter-spacing:0.15em;">COURT
+          FINDER</span>
+      </div>
+      <h1 style="font-size:24px; font-weight:800; color:white; margin-bottom:4px;">Crie sua conta</h1>
+      <p style="font-size:13px; color:#938F99;">Junte-se à comunidade e encontre quadras perto de você.</p>
+    </div>
+
+    <!-- Mensagem de feedback -->
+    <div class="feedback-msg" id="register-feedback">
+      <span id="register-feedback-text"></span>
+    </div>
+
+    <!-- Formulário -->
+    <div style="display:flex; flex-direction:column; gap:18px;" id="register-form">
+
+      <!-- Nome -->
+      <div class="field-group">
+        <label class="field-label">Nome completo</label>
+        <div class="field-input">
+          <span class="material-symbols-outlined field-icon">person</span>
+          <input id="reg-name" type="text" placeholder="Seu nome" autocomplete="name">
+        </div>
+      </div>
+
+      <!-- E-mail + Senha em linha -->
+      <div class="fields-row">
+        <div class="field-group">
+          <label class="field-label">E-mail</label>
+          <div class="field-input">
+            <span class="material-symbols-outlined field-icon">mail</span>
+            <input id="reg-email" type="email" placeholder="seu@email.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Senha</label>
+          <div class="field-input">
+            <span class="material-symbols-outlined field-icon">lock</span>
+            <input id="reg-password" type="password" placeholder="Mín. 6 caracteres" autocomplete="new-password"
+              oninput="checkStrength(this.value)">
+          </div>
+          <!-- Indicador de força -->
+          <div class="password-strength">
+            <div class="strength-bar" id="bar1"></div>
+            <div class="strength-bar" id="bar2"></div>
+            <div class="strength-bar" id="bar3"></div>
+          </div>
+          <div class="strength-label" id="strength-label"></div>
+        </div>
+      </div>
+
+      <!-- Posição em quadra -->
+      <div class="field-group">
+        <label class="field-label">Sua posição em quadra</label>
+        <div class="position-grid" id="position-grid">
+          <div class="position-chip" onclick="selectPosition('armador', this)">
+            <span class="pos-abbr">ARM</span>
+            <span class="pos-name">Armador</span>
+          </div>
+          <div class="position-chip" onclick="selectPosition('ala_armador', this)">
+            <span class="pos-abbr">A/A</span>
+            <span class="pos-name">Ala Armador</span>
+          </div>
+          <div class="position-chip" onclick="selectPosition('ala', this)">
+            <span class="pos-abbr">ALA</span>
+            <span class="pos-name">Ala</span>
+          </div>
+          <div class="position-chip" onclick="selectPosition('ala_pivo', this)">
+            <span class="pos-abbr">A/P</span>
+            <span class="pos-name">Ala Pivô</span>
+          </div>
+          <div class="position-chip" onclick="selectPosition('pivo', this)">
+            <span class="pos-abbr">PIV</span>
+            <span class="pos-name">Pivô</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botão de cadastro -->
+      <button class="btn-primary" id="btn-register" onclick="handleRegister()" style="margin-top:6px;">
+        CRIAR CONTA
+      </button>
+
+      <p style="font-size:11px; color:#49454F; text-align:center;">
+        Já tem conta?
+        <span style="color:#938F99; cursor:pointer; text-decoration:underline;"
+          onclick="window.location.href='login.html'">Faça login</span>
+      </p>
+
+    </div>
+
+    <!-- Tela de sucesso (exibida após cadastro) -->
+    <div id="success-screen" style="display:none; text-align:center; padding:20px 0;">
+      <div
+        style="width:64px; height:64px; border-radius:50%; background:rgba(34,197,94,0.15); border:2px solid rgba(34,197,94,0.4); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <span class="material-symbols-outlined" style="font-size:32px; color:#4ADE80;">check</span>
+      </div>
+      <h3 style="font-size:18px; font-weight:800; color:white; margin-bottom:8px;">Conta criada!</h3>
+      <p style="font-size:13px; color:#938F99; margin-bottom:24px;">Confirme seu e-mail e depois faça login para acessar
+        o app.</p>
+      <button class="btn-primary" onclick="window.location.href='login.html'">IR PARA O LOGIN</button>
+    </div>
+
+  </div>
+
+
+ 
+  <script src="./js/register.js"></script>
+
+</body>
+
+</html>
