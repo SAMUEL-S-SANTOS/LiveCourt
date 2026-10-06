@@ -1,13 +1,13 @@
 // ---------- CONFIGURAÇÃO SUPABASE ----------
-// Substitua pelos seus dados em: https://supabase.com → Project Settings → API
-const SUPABASE_URL = 'https://spiaxfdynygwhpiixthw.supabase.co';
+// Substitua pelos seus dados em: https://supabaseClient.com → Project Settings → API
+const SUPABASE_URL = 'https://spiaxfdynygwhpiixthw.supabaseClient.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwaWF4ZmR5bnlnd2hwaWl4dGh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NjkwNjAsImV4cCI6MjEwMzM0NTA2MH0.f3ug1ZbsS37agcRQBYSuvo2-brpOkOmWQFnzECF52W4';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Redireciona se já logado
 async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) window.location.href = 'home.html';
 }
 checkSession();
@@ -95,10 +95,11 @@ async function handleRegister() {
     btn.textContent = 'CRIANDO CONTA...';
 
     // 1. Cria o usuário no Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
+            emailRedirectTo: window.location.origin + '/Index.html',
             data: {
                 full_name: name,    // salvo no metadata do auth
                 position: selectedPosition
