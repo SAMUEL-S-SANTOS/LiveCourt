@@ -9,9 +9,9 @@
 
 // ---------- CONFIGURAÇÃO SUPABASE ----------
 
-const SUPABASE_URL = 'https://spiaxfdynygwhpiixthw.supabase.co';
+const SUPABASE_URL = 'https://spiaxfdynygwhpiixthw.supabaseClient.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwaWF4ZmR5bnlnd2hwaWl4dGh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NjkwNjAsImV4cCI6MjEwMzM0NTA2MH0.f3ug1ZbsS37agcRQBYSuvo2-brpOkOmWQFnzECF52W4';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
 // ---------- PROTEÇÃO DE ROTA ----------
@@ -19,7 +19,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // evitando que o redirect aconteça antes dos elementos existirem.
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
 
   if (!session) {
     window.location.replace('Index.html');
@@ -59,11 +59,14 @@ async function loadUserInfo(userId) {
   if (!profile) return;
 
   // Iniciais para o avatar (primeiras letras do nome)
-  const initials = profile.name
+  const displayName = profile.name || 'Jogador';
+  const displayPosition = profile.position || 'Jogador';
+  const initials = displayName
     .split(' ')
+    .filter(Boolean)
     .slice(0, 2)
     .map(w => w[0].toUpperCase())
-    .join('');
+    .join('') || '?';
 
   // Atualiza sidebar rodapé
   const sidebarName = document.getElementById('sidebar-user-name');
@@ -71,8 +74,8 @@ async function loadUserInfo(userId) {
   const sidebarAv   = document.getElementById('sidebar-avatar');
   const topbarAv    = document.getElementById('topbar-avatar');
 
-  if (sidebarName) sidebarName.textContent = profile.name;
-  if (sidebarPos)  sidebarPos.textContent  = profile.position.replace('_', ' ');
+  if (sidebarName) sidebarName.textContent = displayName;
+  if (sidebarPos)  sidebarPos.textContent  = displayPosition.replace('_', ' ');
   if (sidebarAv)   sidebarAv.textContent   = initials;
   if (topbarAv)    topbarAv.textContent     = initials;
 }
@@ -247,7 +250,7 @@ async function renderCourts() {
   }
 
   // Busca IDs dos favoritos do usuário logado
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   let favIds = [];
   if (user) {
     const { data: favs } = await supabase
@@ -300,7 +303,7 @@ async function renderCourts() {
 async function toggleFav(courtId, event) {
   if (event) event.stopPropagation();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     alert('Entre na sua conta para salvar favoritos.');
     window.location.href = 'Index.html';
@@ -317,10 +320,10 @@ async function toggleFav(courtId, event) {
 
   if (existing) {
     // Já é favorito → remove
-    await supabase.from('favorites').delete().eq('id', existing.id);
+    await supabaseClient.from('favorites').delete().eq('id', existing.id);
   } else {
     // Não é favorito → adiciona
-    await supabase.from('favorites').insert({
+    await supabaseClient.from('favorites').insert({
       user_id:  user.id,
       court_id: courtId
     });
@@ -360,7 +363,7 @@ async function saveNewCourt() {
   btn.disabled    = true;
   btn.textContent = 'SALVANDO...';
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     alert('Sua sessão expirou. Entre novamente para publicar uma quadra.');
     window.location.href = 'Index.html';
@@ -382,7 +385,7 @@ async function saveNewCourt() {
     newCourt.longitude = STATE.formCoordinates.longitude;
   }
 
-  const { error } = await supabase.from('courts').insert(newCourt);
+  const { error } = await supabaseClient.from('courts').insert(newCourt);
 
   btn.disabled    = false;
   btn.textContent = 'SALVAR E PUBLICAR QUADRA';
@@ -411,7 +414,7 @@ async function saveNewCourt() {
 // ================================================================
 
 async function renderProfile() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
 
   // Busca perfil do jogador
@@ -436,18 +439,21 @@ async function renderProfile() {
 
   // ---------- Atualiza card do jogador ----------
   if (profile) {
-    const initials = profile.name
+    const displayName = profile.name || user.email?.split('@')[0] || 'Jogador';
+    const displayPosition = profile.position || 'Jogador';
+    const initials = displayName
       .split(' ')
+      .filter(Boolean)
       .slice(0, 2)
       .map(w => w[0].toUpperCase())
-      .join('');
+      .join('') || '?';
 
     const nameEl     = document.getElementById('profile-name');
     const posEl      = document.getElementById('profile-position');
     const avatarEl   = document.getElementById('profile-avatar');
 
-    if (nameEl)   nameEl.textContent   = profile.name;
-    if (posEl)    posEl.textContent    = profile.position.replace('_', ' ');
+    if (nameEl)   nameEl.textContent   = displayName;
+    if (posEl)    posEl.textContent    = displayPosition.replace('_', ' ');
     if (avatarEl) avatarEl.textContent = initials;
   }
 
