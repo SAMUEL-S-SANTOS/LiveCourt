@@ -1,13 +1,13 @@
 // ---------- CONFIGURAÇÃO SUPABASE ----------
-// Substitua pelos seus dados em: https://supabase.com → Project Settings → API
-const SUPABASE_URL = 'https://spiaxfdynygwhpiixthw.supabase.co';
+// Substitua pelos seus dados em: https://supabaseClient.com → Project Settings → API
+const SUPABASE_URL = 'https://spiaxfdynygwhpiixthw.supabaseClient.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwaWF4ZmR5bnlnd2hwaWl4dGh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NjkwNjAsImV4cCI6MjEwMzM0NTA2MH0.f3ug1ZbsS37agcRQBYSuvo2-brpOkOmWQFnzECF52W4';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Redireciona para o app se já houver sessão ativa
 async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) window.location.href = 'home.html';
 }
 checkSession();
@@ -36,7 +36,7 @@ async function handleLogin() {
     btn.disabled = true;
     btn.textContent = 'ENTRANDO...';
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
     if (error) {
         errorMsg.textContent = error.message === 'Email not confirmed' ? 'Confirme seu e-mail antes de entrar.' : 'E-mail ou senha incorretos.';
